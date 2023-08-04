@@ -37,9 +37,7 @@ abstract contract Ownable is Context {
     /**
      * @dev Returns the address of the current owner.
      */
-    function getOwner() external view returns (address) {
-        return _owner;
-    }
+    
 
     /**
      * @dev Throws if called by any account other than the owner.
@@ -297,20 +295,239 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
 }
 
+
+// CAUTION
+// This version of SafeMath should only be used with Solidity 0.8 or later,
+// because it relies on the compiler's built in overflow checks.
+
+/**
+ * @dev Wrappers over Solidity's arithmetic operations.
+ *
+ * NOTE: `SafeMath` is generally not needed starting with Solidity 0.8, since the compiler
+ * now has built in overflow checking.
+ */
+library SafeMath {
+    /**
+     * @dev Returns the addition of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        unchecked {
+            uint256 c = a + b;
+            if (c < a) return (false, 0);
+            return (true, c);
+        }
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        unchecked {
+            if (b > a) return (false, 0);
+            return (true, a - b);
+        }
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        unchecked {
+            // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+            // benefit is lost if 'b' is also tested.
+            // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+            if (a == 0) return (true, 0);
+            uint256 c = a * b;
+            if (c / a != b) return (false, 0);
+            return (true, c);
+        }
+    }
+
+    /**
+     * @dev Returns the division of two unsigned integers, with a division by zero flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        unchecked {
+            if (b == 0) return (false, 0);
+            return (true, a / b);
+        }
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        unchecked {
+            if (b == 0) return (false, 0);
+            return (true, a % b);
+        }
+    }
+
+    /**
+     * @dev Returns the addition of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `+` operator.
+     *
+     * Requirements:
+     *
+     * - Addition cannot overflow.
+     */
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a + b;
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a - b;
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `*` operator.
+     *
+     * Requirements:
+     *
+     * - Multiplication cannot overflow.
+     */
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a * b;
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers, reverting on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator.
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a / b;
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * reverting when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a % b;
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {trySub}.
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        unchecked {
+            require(b <= a, errorMessage);
+            return a - b;
+        }
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers, reverting with custom message on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        unchecked {
+            require(b > 0, errorMessage);
+            return a / b;
+        }
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * reverting with custom message when dividing by zero.
+     *
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {tryMod}.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        unchecked {
+            require(b > 0, errorMessage);
+            return a % b;
+        }
+    }
+}
+
 /**
  *  Soulverse Token
  */
+ 
+ 
+
+
+
 contract Soulverse is ERC20, Ownable {
-     // Max supply, 21.6 billion tokens with 18 decimals
-    uint256 public constant FIXED_SUPPLY = 21_600_000_000 * 10**18;
+    using SafeMath for uint256;
+
+    // Max supply, 21.6 billion tokens with 18 decimals
+    uint256 public constant FIXED_SUPPLY = 21000000000 * 10**18;
+
     // Per day transfer limit, per wallet
     uint256 public transferLimit;
 
-    uint256 public constant MAX_TOKEN_BALANCE = 1000000 * 10**18; // Maximum token balance an address can hold
-    uint256 public constant MIN_TOKEN_BALANCE = 100 * 10**18; // Minimum token balance an address can hold
-     uint256 public constant MAX_TRANSFER_AMOUNT = 50000 * 10**18; // Max transfer from a wallet to another wallet
-
-
+    uint256 public constant MAX_TRANSFER_AMOUNT = 50000 * 10**18; // Max transfer from a wallet to another wallet
+    uint256 public constant MAX_WALLET_HOLDING = 1000000 * 10**18; // Maximum token holding per wallet
+    uint256 public constant MIN_WALLET_HOLDING = 100 * 10**18; // Minimum token holding per wallet
+    uint256 public constant MAX_SELLING_PER_DAY = 100000 * 10**18;
 
     address public operator;
 
@@ -343,6 +560,8 @@ contract Soulverse is ERC20, Ownable {
     event BlackListAccount(address account);
 
     event UnBlackListAccount(address account);
+
+    // event UnusualActivityDetected(address indexed from, address indexed to, uint256 amount);
 
     constructor() ERC20("SoulCoin", "SoulX") {
         // Mint fixed supply
@@ -397,42 +616,60 @@ contract Soulverse is ERC20, Ownable {
 
     function blacklistAccount(address account) external onlyAuthorized {
         _blacklisted[account] = true;
-	emit BlackListAccount(account);
+        emit BlackListAccount(account);
     }
 
     function unBlacklistAccount(address account) external onlyAuthorized {
         delete _blacklisted[account];
-	emit UnBlackListAccount(account);
+        emit UnBlackListAccount(account);
     }
 
     function isBlacklisted(address account) public view returns (bool) {
         return _blacklisted[account];
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual override {
-
-	require(!isBlacklisted(from) && !isBlacklisted(to), "ERC20: This address is blacklisted");
-
+    /**
+     * @notice Overrides the transfer function to include validation for maximum and minimum token holdings per wallet
+     * @param recipient The address to transfer tokens to
+     * @param amount The amount of tokens to transfer
+     * @return A boolean indicating the success of the transfer
+     */
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        require(amount >= MIN_WALLET_HOLDING, "Amount below minimum per wallet");
+        require(balanceOf(recipient).add(amount) <= MAX_WALLET_HOLDING, "Amount exceeds maximum per wallet");
+        require(balanceOf(msg.sender).sub(amount) >= MIN_WALLET_HOLDING, "Sender balance will be below minimum per wallet");
+        require(isWhitelisted(msg.sender), "Sender is not whitelisted");
+        
+        // Add the validation for maximum selling per wallet per day
+        require(userTransfers[msg.sender].perDayTransfer.add(amount) <= MAX_SELLING_PER_DAY, "Maximum selling per wallet per day reached");
+        
         // Check for transfer limits, skip for mints and burns
-        if ((transferLimit > 0) && (from != address(0)) && (to != address(0))) {
-            // Both 'from' and 'to' addresses should not be in the whiltelist
+        if ((transferLimit > 0) && (msg.sender != address(0)) && (recipient != address(0))) {
+            // Both 'msg.sender' and 'recipient' addresses should not be in the whitelist
             // to enforce the limit
-            if (!isWhitelisted(from) && !isWhitelisted(to))
-                _enforceTransferLimit(from, amount);
-                 if (to != address(0)) {
-        // Check for maximum token balance
-        require(balanceOf(to) + amount <= MAX_TOKEN_BALANCE, "SoulCoin: Maximum token balance exceeded");
-
-        // Check for minimum token balance
-        require(balanceOf(to) + amount >= MIN_TOKEN_BALANCE, "SoulCoin: Minimum token balance not met");
-    }
+            if (!isWhitelisted(msg.sender) && !isWhitelisted(recipient)) {
+                _enforceTransferLimit(msg.sender, amount);
+            }
         }
+        
+        return super.transfer(recipient, amount);
     }
 
+    /**
+     * @notice Overrides the transferFrom function to include validation for maximum and minimum token holdings per wallet
+     * @param sender The address to transfer tokens from
+     * @param recipient The address to transfer tokens to
+     * @param amount The amount of tokens to transfer
+     * @return A boolean indicating the success of the transfer
+     */
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        require(amount >= MIN_WALLET_HOLDING, "Amount below minimum per wallet");
+        require(balanceOf(recipient).add(amount) <= MAX_WALLET_HOLDING, "Amount exceeds maximum per wallet");
+        require(isWhitelisted(msg.sender), "Sender is not whitelisted");
+        
+        return super.transferFrom(sender, recipient, amount);
+    }
+    
     function _enforceTransferLimit(address from, uint256 amount) internal {
         UserTransfer storage uTransfer = userTransfers[from];
 
@@ -446,15 +683,10 @@ contract Soulverse is ERC20, Ownable {
             uTransfer.perDayTransfer += amount;
         }
     }
-
-    function recoverWrongTokens(
-        address token,
-        address to,
-        uint256 amount
-    ) external onlyAuthorized {
-        if (token == address(this))
-           this.transfer(to, amount);
-        else
-           IERC20(token).transfer(to, amount);
+    
+    function resetDailyTransferCount() external {
+        UserTransfer storage uTransfer = userTransfers[msg.sender];
+        uTransfer.lastTime = block.timestamp;
+        uTransfer.perDayTransfer = 0;
     }
 }
