@@ -1,5 +1,3 @@
-
-
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
@@ -511,11 +509,7 @@ library SafeMath {
  *  Soulverse Token
  */
  
- 
-
-
-
-contract Soulverse is ERC20, Ownable {
+ contract Soulverse is ERC20, Ownable {
     using SafeMath for uint256;
 
     // Max supply, 21.6 billion tokens with 18 decimals
@@ -528,11 +522,17 @@ contract Soulverse is ERC20, Ownable {
     uint256 public constant MAX_WALLET_HOLDING = 1000000 * 10**18; // Maximum token holding per wallet
     uint256 public constant MIN_WALLET_HOLDING = 100 * 10**18; // Minimum token holding per wallet
     uint256 public constant MAX_SELLING_PER_DAY = 100000 * 10**18;
+     // Total transaction limit per day
+    uint256 public constant MAX_TRANSACTIONS_PER_DAY = 10000;
+
+    // Mapping to track daily transaction counts for each user
+    mapping(address => uint256) private userTransactionCount;
+
 
     address public operator;
 
     // List of addresses to skip transfer limits checks
-    mapping(address => bool) private _whitelisted;
+    // mapping(address => bool) private _whitelisted;
 
     // List of blacklist addresses to stop transfer
     mapping(address => bool) private _blacklisted;
@@ -600,19 +600,19 @@ contract Soulverse is ERC20, Ownable {
         emit TransferLimitSet(_limit);
     }
 
-    function whitelistAccount(address account) external onlyAuthorized {
-        _whitelisted[account] = true;
-        emit WhiteListAccount(account);
-    }
+    // function whitelistAccount(address account) external onlyAuthorized {
+    //     _whitelisted[account] = true;
+    //     emit WhiteListAccount(account);
+    // }
 
-    function unWhitelistAccount(address account) external onlyAuthorized {
-        delete _whitelisted[account];
-        emit UnWhiteListAccount(account);
-    }
+    // function unWhitelistAccount(address account) external onlyAuthorized {
+    //     delete _whitelisted[account];
+    //     emit UnWhiteListAccount(account);
+    // }
 
-    function isWhitelisted(address account) public view returns (bool) {
-        return _whitelisted[account];
-    }
+    // function isWhitelisted(address account) public view returns (bool) {
+    //     return _whitelisted[account];
+    // }
 
     function blacklistAccount(address account) external onlyAuthorized {
         _blacklisted[account] = true;
@@ -634,22 +634,29 @@ contract Soulverse is ERC20, Ownable {
      * @param amount The amount of tokens to transfer
      * @return A boolean indicating the success of the transfer
      */
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override  returns (bool) {
         require(amount >= MIN_WALLET_HOLDING, "Amount below minimum per wallet");
         require(balanceOf(recipient).add(amount) <= MAX_WALLET_HOLDING, "Amount exceeds maximum per wallet");
         require(balanceOf(msg.sender).sub(amount) >= MIN_WALLET_HOLDING, "Sender balance will be below minimum per wallet");
-        require(isWhitelisted(msg.sender), "Sender is not whitelisted");
+        // require(isWhitelisted(msg.sender), "Sender is not whitelisted");
         
         // Add the validation for maximum selling per wallet per day
         require(userTransfers[msg.sender].perDayTransfer.add(amount) <= MAX_SELLING_PER_DAY, "Maximum selling per wallet per day reached");
         
+         // Increment the user's daily transaction count
+        userTransactionCount[msg.sender] = userTransactionCount[msg.sender].add(1);
+        
+        // Check for maximum transaction per day
+        require(userTransactionCount[msg.sender] <= MAX_TRANSACTIONS_PER_DAY, "Maximum transactions per day exceeded");
+        
+
         // Check for transfer limits, skip for mints and burns
         if ((transferLimit > 0) && (msg.sender != address(0)) && (recipient != address(0))) {
             // Both 'msg.sender' and 'recipient' addresses should not be in the whitelist
             // to enforce the limit
-            if (!isWhitelisted(msg.sender) && !isWhitelisted(recipient)) {
-                _enforceTransferLimit(msg.sender, amount);
-            }
+            // if (!isWhitelisted(msg.sender) && !isWhitelisted(recipient)) {
+                // _enforceTransferLimit(msg.sender, amount);
+            // }
         }
         
         return super.transfer(recipient, amount);
@@ -662,10 +669,10 @@ contract Soulverse is ERC20, Ownable {
      * @param amount The amount of tokens to transfer
      * @return A boolean indicating the success of the transfer
      */
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override  returns (bool) {
         require(amount >= MIN_WALLET_HOLDING, "Amount below minimum per wallet");
         require(balanceOf(recipient).add(amount) <= MAX_WALLET_HOLDING, "Amount exceeds maximum per wallet");
-        require(isWhitelisted(msg.sender), "Sender is not whitelisted");
+        // require(isWhitelisted(msg.sender), "Sender is not whitelisted");
         
         return super.transferFrom(sender, recipient, amount);
     }
