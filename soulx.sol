@@ -532,7 +532,7 @@ library SafeMath {
     address public operator;
 
     // List of addresses to skip transfer limits checks
-    // mapping(address => bool) private _whitelisted;
+    mapping(address => bool) private _whitelisted;
 
     // List of blacklist addresses to stop transfer
     mapping(address => bool) private _blacklisted;
@@ -600,19 +600,19 @@ library SafeMath {
         emit TransferLimitSet(_limit);
     }
 
-    // function whitelistAccount(address account) external onlyAuthorized {
-    //     _whitelisted[account] = true;
-    //     emit WhiteListAccount(account);
-    // }
+    function whitelistAccount(address account) external onlyAuthorized {
+        _whitelisted[account] = true;
+        emit WhiteListAccount(account);
+    }
 
-    // function unWhitelistAccount(address account) external onlyAuthorized {
-    //     delete _whitelisted[account];
-    //     emit UnWhiteListAccount(account);
-    // }
+    function unWhitelistAccount(address account) external onlyAuthorized {
+        delete _whitelisted[account];
+        emit UnWhiteListAccount(account);
+    }
 
-    // function isWhitelisted(address account) public view returns (bool) {
-    //     return _whitelisted[account];
-    // }
+    function isWhitelisted(address account) public view returns (bool) {
+        return _whitelisted[account];
+    }
 
     function blacklistAccount(address account) external onlyAuthorized {
         _blacklisted[account] = true;
@@ -635,14 +635,20 @@ library SafeMath {
      * @return A boolean indicating the success of the transfer
      */
     function transfer(address recipient, uint256 amount) public virtual override  returns (bool) {
-        require(amount >= MIN_WALLET_HOLDING, "Amount below minimum per wallet");
+        // it will check address is not whitelisted because there is no cap on whitelisted address
+        require(
+            !isWhitelisted(msg.sender) || (amount <= MAX_TRANSFER_AMOUNT),
+            "Transfer amount exceeds maximum"
+        );
         require(balanceOf(recipient).add(amount) <= MAX_WALLET_HOLDING, "Amount exceeds maximum per wallet");
         require(balanceOf(msg.sender).sub(amount) >= MIN_WALLET_HOLDING, "Sender balance will be below minimum per wallet");
         // require(isWhitelisted(msg.sender), "Sender is not whitelisted");
         
-        // Add the validation for maximum selling per wallet per day
-        require(userTransfers[msg.sender].perDayTransfer.add(amount) <= MAX_SELLING_PER_DAY, "Maximum selling per wallet per day reached");
-        
+        // Add the validation for maximum selling per wallet per day + it will check address is not whitelisted because there is no cap on whitelisted address
+         require(
+            !isWhitelisted(msg.sender) || (userTransfers[msg.sender].perDayTransfer.add(amount) <= MAX_SELLING_PER_DAY),
+            "Maximum selling per wallet per day reached"
+        );
          // Increment the user's daily transaction count
         userTransactionCount[msg.sender] = userTransactionCount[msg.sender].add(1);
         
@@ -670,6 +676,11 @@ library SafeMath {
      * @return A boolean indicating the success of the transfer
      */
     function transferFrom(address sender, address recipient, uint256 amount) public virtual override  returns (bool) {
+         require(
+        !isWhitelisted(msg.sender) || (amount <= MAX_TRANSFER_AMOUNT),
+        "Transfer amount exceeds maximum"
+    );
+
         require(amount >= MIN_WALLET_HOLDING, "Amount below minimum per wallet");
         require(balanceOf(recipient).add(amount) <= MAX_WALLET_HOLDING, "Amount exceeds maximum per wallet");
         // require(isWhitelisted(msg.sender), "Sender is not whitelisted");
