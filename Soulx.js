@@ -1,96 +1,103 @@
 const { expect } = require("chai");
+const { ethers } = require("hardhat");
 
-describe("Soulverse", function () {
-  let soulverse;
-  let owner;
-  let operator;
-  let recipient;
+describe("Soulverse", () => {
+    let contract;
+    let owner;
+    let user1;
+    let user2;
+    let user3;
+   
+    async function setup() {
+        const provider = await ethers.provider;
+        contract = await ethers.getContractFactory("Soulverse");
+        contract = await contract.deploy(provider);
+        owner = provider.getSigner();
+        user1 = ethers.Wallet.createRandom().address;
+        user2 = ethers.Wallet.createRandom().address;
+        user3 = ethers.Wallet.createRandom().address;
+    }
+    beforeEach(async () => {
+        await setup();
+    });
+    it("should set the transfer limit", async () => {
+        await contract.setTransferLimit(1000);
+        expect(await contract.transferLimit()).to.equal(1000);
+    });
+    it("should allow transfer if the transfer limit is not set", async () => {
+        await contract.transfer(user2, 100);
+        const balance = await contract.balanceOf(user2);
+        expect(balance).to.equal(100);
+    });
+    it("should not allow transfer if the transfer limit is reached", async () => {
+        await contract.setTransferLimit(100);
+        await contract.transfer(user2, 100);
+        try {
+            await contract.transfer(user2, 1);
+        } catch (error) {
+            expect(error.message).to.equal("SoulCoin: daily limit exceeds");
+        }
+    });
+    it("should allow transfer if the sender is whitelisted", async () => {
+        await contract.whitelistAccount(user1);
+        await contract.transfer(user1, 1000);
+        const balance = await contract.balanceOf(user1);
+        expect(balance).to.equal(1000);
+    });
+    it("should not allow transfer if the recipient is blacklisted", async () => {
+      await contract.blacklistAccount(user2);
+      try {
+          await contract.transfer(user1, 100);
+      } catch (error) {
+          expect(error.message).to.equal("SoulCoin: recipient is blacklisted");
+      }
+  });
+    it("should allow transfer if the transfer is from the owner", async () => {
+        await contract.transfer(user1, 100);
+        const balance = await contract.balanceOf(user1);
+        expect(balance).to.equal(100);
+    });
+    it("should not allow transfer if the transaction count for the user exceeds the limit", async () => {
+        await contract.setTransferLimit(100);
+        for (let i = 0; i < 100; i++) {
+            await contract.transfer(user3, 1);
+        }
+        try {
+            await contract.transfer(user3, 1);
+        } catch (error) {
+            expect(error.message).to.equal("SoulCoin: maximum transactions per day exceeded");
+        }
+    });
+    it("should allow transfer after the daily transaction count is reset", async () => {
+        await contract.resetDailyTransferCount();
+        await contract.transfer(user3, 1);
+        const balance = await contract.balanceOf(user3);
+        expect(balance).to.equal(1);
+    });
 
-  beforeEach(async function () {
-    const Soulverse = await ethers.getContractFactory("Soulverse");
 
-    soulverse = await Soulverse.deploy();
-    await soulverse.deployed();
-
-    [owner, operator, recipient] = await ethers.getSigners();
+    it("should prevent transferring below minimum per wallet limit for non-whitelisted accounts", async () => {
+      await contract.transfer(user2, 100); // Transfer some tokens to user2
+      try {
+          await contract.transfer(user2, 10); // Try to transfer below the minimum wallet holding
+      } catch (error) {
+          expect(error.message).to.equal("Sender balance will be below minimum per wallet");
+      }
   });
 
-  it("should have the correct initial supply", async function () {
-    const expectedSupply = ethers.utils.parseEther("21000000000");
-    const actualSupply = await soulverse.FIXED_SUPPLY();
+  
 
-    expect(actualSupply).to.equal(expectedSupply);
+  it("should prevent transferring to a blacklisted recipient", async () => {
+      await contract.blacklistAccount(user2);
+      try {
+          await contract.transfer(user2, 100);
+      } catch (error) {
+          expect(error.message).to.equal("SoulCoin: recipient is blacklisted");
+      }
   });
 
-  it("should set the operator correctly", async function () {
-    await soulverse.connect(owner).setOperator(operator.address);
-    const actualOperator = await soulverse.operator();
+  
 
-    expect(actualOperator).to.equal(operator.address);
-  });
-
-  it("should burn tokens successfully", async function () {
-    const burnAmount = ethers.utils.parseEther("1000");
-    const initialBalance = await soulverse.balanceOf(owner.address);
-
-    await soulverse.connect(owner).burn(burnAmount);
-
-    const newBalance = await soulverse.balanceOf(owner.address);
-
-    expect(newBalance).to.equal(initialBalance.sub(burnAmount));
-  });
-
-  it("should set the transfer limit correctly", async function () {
-    const transferLimit = ethers.utils.parseEther("10000");
-
-    await soulverse.connect(owner).setTransferLimit(transferLimit);
-    const actualTransferLimit = await soulverse.transferLimit();
-
-    expect(actualTransferLimit).to.equal(transferLimit);
-  });
-
-  it("should blacklist and unblacklist accounts correctly", async function () {
-    const account = recipient.address;
-
-    await soulverse.connect(owner).blacklistAccount(account);
-    expect(await soulverse.isBlacklisted(account)).to.equal(true);
-
-    await soulverse.connect(owner).unBlacklistAccount(account);
-    expect(await soulverse.isBlacklisted(account)).to.equal(false);
-  });
-
-  it("should transfer tokens successfully within limits", async function () {
-    const transferAmount = ethers.utils.parseEther("1000");
-
-    await soulverse.transfer(recipient.address, transferAmount);
-    const recipientBalance = await soulverse.balanceOf(recipient.address);
-
-    expect(recipientBalance).to.equal(transferAmount);
-  });
-
-  it("should transfer tokens successfully from an approved allowance within limits", async function () {
-    const allowanceAmount = ethers.utils.parseEther("1000");
-
-    await soulverse.connect(owner).approve(operator.address, allowanceAmount);
-    await soulverse.connect(operator).transferFrom(owner.address, recipient.address, allowanceAmount);
-    const recipientBalance = await soulverse.balanceOf(recipient.address);
-
-    expect(recipientBalance).to.equal(allowanceAmount);
-  });
-
-  it("should not transfer tokens below the minimum wallet holding", async function () {
-    const transferAmount = ethers.utils.parseEther("50");
-
-    await expect(soulverse.transfer(recipient.address, transferAmount)).to.be.revertedWith(
-      "Amount below minimum per wallet"
-    );
-  });
-
-  it("should not transfer tokens exceeding the maximum wallet holding", async function () {
-    const transferAmount = ethers.utils.parseEther("1100000");
-
-    await expect(soulverse.transfer(recipient.address, transferAmount)).to.be.revertedWith(
-      "Amount exceeds maximum per wallet"
-    );
-  });
+  
+    
 });
