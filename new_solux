@@ -1,20 +1,8 @@
-/**
- *Submitted for verification at PolygonScan.com on 2023-04-24
-*/
+
 
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-/**
- * @dev Provides information about the current execution context, including the
- * sender of the transaction and its data. While these are generally available
- * via msg.sender and msg.data, they should not be accessed in such a direct
- * manner, since when dealing with meta-transactions the account sending and
- * paying for execution may not be the actual sender (as far as an application
- * is concerned).
- *
- * This contract is only required for intermediate, library-like contracts.
- */
 abstract contract Context {
     function _msgSender() internal view virtual returns (address) {
         return msg.sender;
@@ -576,15 +564,15 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
  *  Soulverse Token
  */
 contract Soulverse is ERC20, Ownable {
-    // Fixed supply, 2160B tokens
-    uint256 public constant FIXED_SUPPLY = 2160_000_000_000 ether;
+    // Fixed supply, 21B tokens
+    uint256 public constant FIXED_SUPPLY = 21000000000 * 10**18;
 
     // Per day transfer limit, per wallet
     uint256 public transferLimit;
     uint256 public maxTokenHoldLimit;
     
 
-    address public operator;
+    // address public operator;
 
     // List of addresses to skip transfer limits checks
     mapping(address => bool) private _whitelisted;
@@ -606,7 +594,7 @@ contract Soulverse is ERC20, Ownable {
      */
     event TransferLimitSet(uint256 indexed limit);
 
-    event SetOperator(address operator);
+    // event SetOperator(address operator);
 
     event WhiteListAccount(address account);
 
@@ -623,7 +611,7 @@ contract Soulverse is ERC20, Ownable {
 
     modifier onlyAuthorized() {
         require(
-            (owner() == msg.sender) || (operator == msg.sender),
+            (owner() == msg.sender) ,
             "Not authorized"
         );
 
@@ -636,10 +624,10 @@ contract Soulverse is ERC20, Ownable {
 
     
 
-    function setOperator(address _operator) external onlyOwner {
-        operator = _operator;
-        emit SetOperator(_operator);
-    }
+    // function setOperator(address _operator) external onlyOwner {
+    //     operator = _operator;
+    //     emit SetOperator(_operator);
+    // }
 
     /**
      * @notice burns tokens of the caller. No per day limit on burn
